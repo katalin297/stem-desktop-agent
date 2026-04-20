@@ -1,0 +1,1 @@
+When a tool fails, a good recovery move is to inspect assumptions such as working directory, file path, and command syntax.

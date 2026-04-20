@@ -1,0 +1,1 @@
+An agent should not keep every observation forever. It should compress earlier steps into short summaries.

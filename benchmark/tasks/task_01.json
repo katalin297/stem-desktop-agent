@@ -1,0 +1,20 @@
+{
+  "id": "task_01",
+  "title": "Reproduce failing tests and identify likely cause",
+  "task_type": "debugging",
+  "repo_path": "./benchmark/repos/sample_bug_repo",
+  "issue": "Tests are failing after a recent change. Reproduce the failure, identify the likely root cause, and write a short triage report.",
+  "goal": {
+    "reproduce_failure": true,
+    "identify_likely_file": true,
+    "write_report": true
+  },
+  "expected": {
+    "success": true,
+    "main_evidence_contains": "pytest -q",
+    "likely_files_should_include": [
+      "benchmark/repos/sample_bug_repo/math_utils.py",
+      "benchmark/repos/sample_bug_repo/tests/test_math_utils.py"
+    ]
+  }
+}

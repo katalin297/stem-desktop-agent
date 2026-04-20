@@ -1,0 +1,29 @@
+[
+  {
+    "name": "baseline_general",
+    "model": "gpt-5.4",
+    "max_steps": 6,
+    "memory_mode": "rolling_summary",
+    "debugging_start_mode": "run_first",
+    "debugging_files_after_failure": 2,
+    "research_min_files": 3
+  },
+  {
+    "name": "inspect_first",
+    "model": "gpt-5.4",
+    "max_steps": 6,
+    "memory_mode": "rolling_summary",
+    "debugging_start_mode": "read_first",
+    "debugging_files_after_failure": 3,
+    "research_min_files": 2
+  },
+  {
+    "name": "fast_finish",
+    "model": "gpt-5.4",
+    "max_steps": 4,
+    "memory_mode": "rolling_summary",
+    "debugging_start_mode": "run_first",
+    "debugging_files_after_failure": 1,
+    "research_min_files": 2
+  }
+]

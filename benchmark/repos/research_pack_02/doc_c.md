@@ -1,0 +1,1 @@
+Stopping should depend on evidence quality. If the goal is satisfied clearly, further actions may only add noise.

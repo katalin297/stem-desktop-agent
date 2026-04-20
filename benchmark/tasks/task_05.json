@@ -1,0 +1,20 @@
+{
+  "id": "task_05",
+  "title": "Read another local note pack and produce a short brief",
+  "task_type": "research",
+  "repo_path": "./benchmark/repos/research_pack_02",
+  "issue": "Read the local notes and produce a short brief about memory, tool recovery, and stopping rules.",
+  "goal": {
+    "read_multiple_sources": true,
+    "write_brief": true
+  },
+  "expected": {
+    "success": true,
+    "minimum_files_read": 3,
+    "artifact_should_contain": [
+      "memory",
+      "tool",
+      "stop"
+    ]
+  }
+}

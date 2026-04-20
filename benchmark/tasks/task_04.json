@@ -1,0 +1,19 @@
+{
+  "id": "task_04",
+  "title": "Reproduce failing tests for a list utility bug",
+  "task_type": "debugging",
+  "repo_path": "./benchmark/repos/sample_bug_repo_03",
+  "issue": "A list helper behaves incorrectly. Reproduce the failure and identify the likely files.",
+  "goal": {
+    "reproduce_failure": true,
+    "identify_likely_file": true
+  },
+  "expected": {
+    "success": true,
+    "main_evidence_contains": "pytest -q",
+    "likely_files_should_include": [
+      "benchmark/repos/sample_bug_repo_03/list_utils.py",
+      "benchmark/repos/sample_bug_repo_03/tests/test_list_utils.py"
+    ]
+  }
+}

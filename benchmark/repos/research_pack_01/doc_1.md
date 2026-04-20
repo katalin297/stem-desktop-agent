@@ -1,0 +1,1 @@
+Rolling summaries help an agent keep the important state while dropping repetitive noise from earlier steps.

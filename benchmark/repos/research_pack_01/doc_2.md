@@ -1,0 +1,1 @@
+Tool failures are often caused by bad assumptions: wrong working directory, missing dependencies, or stale context.

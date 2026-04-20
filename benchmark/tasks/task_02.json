@@ -1,0 +1,20 @@
+{
+  "id": "task_02",
+  "title": "Read local notes and produce a short brief",
+  "task_type": "research",
+  "repo_path": "./benchmark/repos/research_pack_01",
+  "issue": "Read the local notes and produce a short brief about how an agent should manage memory, recover from tool failures, and decide when to stop.",
+  "goal": {
+    "read_multiple_sources": true,
+    "write_brief": true
+  },
+  "expected": {
+    "success": true,
+    "minimum_files_read": 3,
+    "artifact_should_contain": [
+      "memory",
+      "tool",
+      "stop"
+    ]
+  }
+}

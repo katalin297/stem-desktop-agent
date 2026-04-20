@@ -1,0 +1,1 @@
+A useful stopping rule is to stop when the agent has enough evidence for a clear answer, not when it has exhausted every possible action.
