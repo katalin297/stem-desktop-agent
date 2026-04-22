@@ -31,7 +31,7 @@ def choose_action_local(task: Task, actions, state: RunState, blueprint) -> Acti
                 return ActionChoice(
                     kind = chosen.kind,
                     value = chosen.value,
-                    reason = "This blueprint inspects a file before running tests."
+                    reason = "[local] This blueprint inspects a file before running tests."
                 )
 
             for action in actions:
@@ -39,7 +39,7 @@ def choose_action_local(task: Task, actions, state: RunState, blueprint) -> Acti
                     return ActionChoice(
                         kind = action.kind,
                         value = action.value,
-                        reason = "Start by running the main test command."
+                        reason = "[local] Start by running the main test command."
                     )
 
         failure_words = ["traceback", "assert", "failed", "error"]
@@ -54,13 +54,13 @@ def choose_action_local(task: Task, actions, state: RunState, blueprint) -> Acti
                 return ActionChoice(
                     kind = chosen.kind,
                     value = chosen.value,
-                    reason = "After failure, inspect relevant files."
+                    reason = "[local] After failure, inspect relevant files."
                 )
 
             return ActionChoice(
                 kind = "finish",
                 value = "",
-                reason = "Enough evidence was collected."
+                reason = "[local] Enough evidence was collected."
             )
 
         if unread_files:
@@ -68,13 +68,13 @@ def choose_action_local(task: Task, actions, state: RunState, blueprint) -> Acti
             return ActionChoice(
                 kind = chosen.kind,
                 value = chosen.value,
-                reason = "Inspect a file because no strong evidence was found yet."
+                reason = "[local] Inspect a file because no strong evidence was found yet."
             )
 
         return ActionChoice(
             kind = "finish",
             value = "",
-            reason = "No better next step is available."
+            reason = "[local] No better next step is available."
         )
 
     if task.task_type == "research":
@@ -88,20 +88,20 @@ def choose_action_local(task: Task, actions, state: RunState, blueprint) -> Acti
             return ActionChoice(
                 kind = chosen.kind,
                 value = chosen.value,
-                reason = "Read another source before finishing."
+                reason = "[local] Read another source before finishing."
             )
 
         return ActionChoice(
             kind = "finish",
             value = "",
-            reason = "Enough sources were read."
+            reason = "[local] Enough sources were read."
         )
 
     first = actions[0]
     return ActionChoice(
         kind = first.kind,
         value = first.value,
-        reason = "Fallback action."
+        reason = "[local] Fallback action."
     )
 
 
@@ -154,8 +154,11 @@ Return only JSON.
     try:
         parsed = json.loads(clean_json(raw))
         choice = ActionChoice(**parsed)
+        choice.reason = f"[llm] {choice.reason}"
     except Exception:
-        return choose_action_local(task, actions, state, blueprint)
+        fallback = choose_action_local(task, actions, state, blueprint)
+        fallback.reason = f"[fallback_invalid_json] {fallback.reason}"
+        return fallback
 
     allowed_pairs = {(action.kind, action.value) for action in actions}
 
@@ -163,6 +166,8 @@ Return only JSON.
         return choice
 
     if (choice.kind, choice.value) not in allowed_pairs:
-        return choose_action_local(task, actions, state, blueprint)
+        fallback = choose_action_local(task, actions, state, blueprint)
+        fallback.reason = f"[fallback_not_allowed] {fallback.reason}"
+        return fallback
 
     return choice

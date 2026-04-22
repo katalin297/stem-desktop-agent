@@ -18,7 +18,7 @@ class StemAgent:
         self.memory = Memory()
         self.blueprint = blueprint
 
-        load_dotenv()
+        load_dotenv(override = True)
         self.use_llm = os.getenv("USE_LLM", "0") == "1"
 
     def load_task(self, task_path: str) -> Task:
@@ -86,6 +86,10 @@ class StemAgent:
 
         for step in range(5, 5 + self.blueprint.max_steps):
             choice = self.choose_action(task, actions, state)
+            print(
+            f"STEP {step} | chooser={'llm' if self.use_llm else 'local'} | "
+            f"kind={choice.kind} | value={choice.value} | reason={choice.reason}"
+            )
             self.memory.add(step, f"Chosen action: {choice.kind} | {choice.value} | {choice.reason}")
 
             observation = self.execute_action(task, choice, state)

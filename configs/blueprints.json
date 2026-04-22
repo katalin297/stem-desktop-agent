@@ -1,7 +1,7 @@
 [
   {
     "name": "baseline_general",
-    "model": "gpt-5.4",
+    "model": "gpt-4o-mini",
     "max_steps": 6,
     "memory_mode": "rolling_summary",
     "debugging_start_mode": "run_first",
@@ -10,7 +10,7 @@
   },
   {
     "name": "inspect_first",
-    "model": "gpt-5.4",
+    "model": "gpt-4o-mini",
     "max_steps": 6,
     "memory_mode": "rolling_summary",
     "debugging_start_mode": "read_first",
@@ -19,7 +19,7 @@
   },
   {
     "name": "fast_finish",
-    "model": "gpt-5.4",
+    "model": "gpt-4o-mini",
     "max_steps": 4,
     "memory_mode": "rolling_summary",
     "debugging_start_mode": "run_first",
