@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 from stem.llm import ask_model
 from stem.types import ActionChoice, RunState, Task
@@ -20,9 +21,16 @@ def clean_json(text: str) -> str:
 
 def choose_action_local(task: Task, actions, state: RunState, blueprint) -> ActionChoice:
     if task.task_type == "debugging":
+        repair_goal = bool(task.goal.get("repair_code"))
+
         unread_files = [
             action for action in actions
             if action.kind == "read_file" and action.value not in state.files_read
+        ]
+
+        write_actions = [
+            action for action in actions
+            if action.kind == "write_file" and action.value not in state.edited_files
         ]
 
         if not state.commands_tried:
@@ -55,6 +63,28 @@ def choose_action_local(task: Task, actions, state: RunState, blueprint) -> Acti
                     kind = chosen.kind,
                     value = chosen.value,
                     reason = "[local] After failure, inspect relevant files."
+                )
+
+            if repair_goal and not state.repair_attempted and write_actions:
+                preferred_targets = [
+                    path for path in state.files_read
+                    if path.endswith(".py") and "test" not in Path(path).name.lower()
+                ]
+
+                for target in preferred_targets:
+                    for action in write_actions:
+                        if action.value == target:
+                            return ActionChoice(
+                                kind = action.kind,
+                                value = action.value,
+                                reason = "[local] Attempt one-file repair in the likely implementation file."
+                            )
+
+                chosen = write_actions[0]
+                return ActionChoice(
+                    kind = chosen.kind,
+                    value = chosen.value,
+                    reason = "[local] Attempt one-file repair."
                 )
 
             return ActionChoice(
@@ -114,9 +144,11 @@ def choose_action_llm(task: Task, actions, state: RunState, blueprint, memory_su
     )
 
     system_prompt = (
-        "You are a careful agent. "
+        "You are a careful task-solving agent. "
         "Choose exactly one next action from the allowed actions. "
-        "Return JSON only with keys: kind, value, reason."
+        "Return JSON only with keys: kind, value, reason. "
+        "If the task requests code repair, you may choose one write_file action after you have enough evidence. "
+        "A write_file action means the system will generate replacement contents for that file and rerun tests automatically."
     )
 
     user_prompt = f"""
@@ -134,6 +166,8 @@ Blueprint:
 Current state:
 - commands_tried: {state.commands_tried}
 - files_read: {state.files_read}
+- edited_files: {state.edited_files}
+- repair_attempted: {state.repair_attempted}
 - finish_requested: {state.finish_requested}
 
 Recent memory:

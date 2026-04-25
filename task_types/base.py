@@ -11,11 +11,11 @@ class TaskType(ABC):
         pass
 
     @abstractmethod
-    def judge_success(self, state: RunState) -> tuple[bool, str | None]:
+    def judge_success(self, task: Task, state: RunState) -> tuple[bool, str | None]:
         pass
 
     @abstractmethod
-    def choose_likely_files(self, state: RunState) -> list[str]:
+    def choose_likely_files(self, task: Task, state: RunState) -> list[str]:
         pass
 
     @abstractmethod

@@ -1,0 +1,23 @@
+{
+  "id": "task_06",
+  "title": "Repair the failing add function so tests pass",
+  "task_type": "debugging",
+  "repo_path": "./benchmark/repos/sample_bug_repo",
+  "issue": "The add helper is wrong. Reproduce the failure, repair the implementation by editing one file, and verify the fix by rerunning tests.",
+  "goal": {
+    "reproduce_failure": true,
+    "repair_code": true,
+    "write_report": true
+  },
+  "expected": {
+    "success": true,
+    "repair_success": true,
+    "edited_files_should_include": [
+      "./benchmark/repos/sample_bug_repo/math_utils.py"
+    ],
+    "artifact_should_contain": [
+      "repair success",
+      "math_utils.py"
+    ]
+  }
+}

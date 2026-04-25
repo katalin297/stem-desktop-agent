@@ -16,7 +16,9 @@ class DebuggingTaskType(TaskType):
             ActionOption(kind = "run_command", value = "python -m unittest", label = "Run unittest"),
         ]
 
-        for file_path in find_interesting_files(task.repo_path)[:8]:
+        interesting_files = find_interesting_files(task.repo_path)[:8]
+
+        for file_path in interesting_files:
             actions.append(
                 ActionOption(
                     kind = "read_file",
@@ -25,10 +27,29 @@ class DebuggingTaskType(TaskType):
                 )
             )
 
+        if task.goal.get("repair_code"):
+            for file_path in interesting_files:
+                lowered = file_path.lower()
+                file_name = Path(file_path).name.lower()
+
+                if lowered.endswith(".py") and "test" not in file_name:
+                    actions.append(
+                        ActionOption(
+                            kind = "write_file",
+                            value = file_path,
+                            label = f"Repair {Path(file_path).name}"
+                        )
+                    )
+
         actions.append(ActionOption(kind = "finish", value = "", label = "Finish"))
         return actions
 
-    def judge_success(self, state: RunState) -> tuple[bool, str | None]:
+    def judge_success(self, task: Task, state: RunState) -> tuple[bool, str | None]:
+        if task.goal.get("repair_code"):
+            if state.repair_success:
+                return True, state.repair_test_command or state.preferred_test_command
+            return False, state.repair_test_command or state.preferred_test_command
+
         for observation in reversed(state.observations):
             lowered = observation.lower()
             if (
@@ -37,12 +58,21 @@ class DebuggingTaskType(TaskType):
                 or "failed" in lowered
                 or "error" in lowered
             ):
-                evidence = state.commands_tried[-1] if state.commands_tried else None
+                evidence = state.preferred_test_command or (state.commands_tried[-1] if state.commands_tried else None)
                 return True, evidence
 
         return False, None
 
-    def choose_likely_files(self, state: RunState) -> list[str]:
+    def choose_likely_files(self, task: Task, state: RunState) -> list[str]:
+        if task.goal.get("repair_code") and state.edited_files:
+            combined = state.edited_files + [
+                path for path in state.files_read
+                if "test" in Path(path).name.lower()
+            ]
+
+            deduped = list(dict.fromkeys(combined))
+            return deduped[:5]
+
         lowered = " ".join(state.observations).lower()
         likely_files: list[str] = []
 
@@ -63,6 +93,44 @@ class DebuggingTaskType(TaskType):
         main_evidence: str | None,
         likely_files: list[str]
     ) -> str:
+        if task.goal.get("repair_code"):
+            lines = [
+                "Debug repair report",
+                f"Task: {task.title}",
+                f"Repair attempted: {'yes' if state.repair_attempted else 'no'}",
+                f"Repair success: {'yes' if state.repair_success else 'no'}",
+                f"Repair improved: {'yes' if state.repair_improved else 'no'}",
+                f"Repair command: {state.repair_test_command if state.repair_test_command else 'none'}",
+                "Edited files:",
+            ]
+
+            if state.edited_files:
+                for path in state.edited_files:
+                    lines.append(f"- {path}")
+            else:
+                lines.append("- none")
+
+            if likely_files:
+                lines.append("Likely relevant files:")
+                for path in likely_files:
+                    lines.append(f"- {path}")
+
+            if state.patch_diff:
+                lines.append("Patch diff:")
+                lines.append(state.patch_diff[:1000])
+
+            useful_observation = None
+            for observation in reversed(state.observations):
+                if "Repair test command:" in observation or "Command:" in observation:
+                    useful_observation = observation[:700]
+                    break
+
+            if useful_observation:
+                lines.append("Observed output snippet:")
+                lines.append(useful_observation)
+
+            return "\n".join(lines)
+
         lines = [
             "Debug triage report",
             f"Task: {task.title}",

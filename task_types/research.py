@@ -27,13 +27,13 @@ class ResearchTaskType(TaskType):
         actions.append(ActionOption(kind = "finish", value = "", label = "Finish"))
         return actions
 
-    def judge_success(self, state: RunState) -> tuple[bool, str | None]:
+    def judge_success(self, task: Task, state: RunState) -> tuple[bool, str | None]:
         if state.finish_requested and len(state.files_read) >= 2:
             return True, f"Read {len(state.files_read)} files and finished"
 
         return False, None
 
-    def choose_likely_files(self, state: RunState) -> list[str]:
+    def choose_likely_files(self, task: Task, state: RunState) -> list[str]:
         return state.files_read[:5]
 
     def build_artifact(

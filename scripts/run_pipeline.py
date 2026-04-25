@@ -14,6 +14,7 @@ def main() -> None:
     run_step([sys.executable, "-m", "eval.run_eval"])
     run_step([sys.executable, "main.py", "benchmark/tasks/task_04.json"])
     run_step([sys.executable, "main.py", "benchmark/tasks/task_05.json"])
+    run_step([sys.executable, "main.py", "benchmark/tasks/task_07.json"])
 
 
 if __name__ == "__main__":

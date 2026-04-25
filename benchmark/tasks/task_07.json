@@ -1,0 +1,23 @@
+{
+  "id": "task_07",
+  "title": "Repair the failing list utility so tests pass",
+  "task_type": "debugging",
+  "repo_path": "./benchmark/repos/sample_bug_repo_03",
+  "issue": "The list helper is wrong. Reproduce the failure, repair the implementation by editing one file, and verify the fix by rerunning tests.",
+  "goal": {
+    "reproduce_failure": true,
+    "repair_code": true,
+    "write_report": true
+  },
+  "expected": {
+    "success": true,
+    "repair_success": true,
+    "edited_files_should_include": [
+      "./benchmark/repos/sample_bug_repo_03/list_utils.py"
+    ],
+    "artifact_should_contain": [
+      "repair success",
+      "list_utils.py"
+    ]
+  }
+}

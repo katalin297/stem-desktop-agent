@@ -9,11 +9,13 @@ TRAIN_TASKS = [
     "benchmark/tasks/task_01.json",
     "benchmark/tasks/task_02.json",
     "benchmark/tasks/task_03.json",
+    "benchmark/tasks/task_06.json",
 ]
 
 TEST_TASKS = [
     "benchmark/tasks/task_04.json",
     "benchmark/tasks/task_05.json",
+    "benchmark/tasks/task_07.json",
 ]
 
 
@@ -29,6 +31,13 @@ def score_task(task, report) -> dict:
             score += 1
         else:
             notes.append("success mismatch")
+
+    if "repair_success" in expected:
+        max_score += 1
+        if report.repair_success == expected["repair_success"]:
+            score += 1
+        else:
+            notes.append("repair success mismatch")
 
     if "main_evidence_contains" in expected:
         max_score += 1
@@ -48,13 +57,23 @@ def score_task(task, report) -> dict:
             else:
                 notes.append(f"missing likely file: {item}")
 
+    if "edited_files_should_include" in expected:
+        needed = expected["edited_files_should_include"]
+        max_score += len(needed)
+
+        for item in needed:
+            if item in report.edited_files:
+                score += 1
+            else:
+                notes.append(f"missing edited file: {item}")
+
     if "minimum_files_read" in expected:
         max_score += 1
         if len(report.likely_files) >= expected["minimum_files_read"]:
             score += 1
         else:
             notes.append("not enough files read")
-    
+
     if "artifact_should_contain" in expected:
         needed_terms = expected["artifact_should_contain"]
         max_score += len(needed_terms)
@@ -94,6 +113,8 @@ def evaluate_blueprint(blueprint, task_paths):
             "task_id": task.id,
             "task_type": task.task_type,
             "success": report.success,
+            "repair_success": report.repair_success,
+            "edited_files": report.edited_files,
             "main_evidence": report.main_evidence,
             "likely_files": report.likely_files,
             "actions_taken": report.actions_taken,

@@ -1,5 +1,7 @@
+import re
 import subprocess
 from pathlib import Path
+
 from stem.types import ToolResult
 
 
@@ -34,3 +36,41 @@ def run_command(command: str, cwd: str) -> ToolResult:
             command = command,
             message = f"Command failed: {e}"
         )
+
+
+def is_test_command(command: str) -> bool:
+    lowered = command.lower()
+    return "pytest" in lowered or "unittest" in lowered
+
+
+def estimate_failure_count(stdout: str, stderr: str, exit_code: int | None) -> int:
+    if exit_code == 0:
+        return 0
+
+    text = f"{stdout}\n{stderr}".lower()
+
+    counts: list[int] = []
+
+    patterns = [
+        r"(\d+)\s+failed",
+        r"(\d+)\s+error",
+        r"(\d+)\s+errors",
+    ]
+
+    for pattern in patterns:
+        for match in re.finditer(pattern, text):
+            counts.append(int(match.group(1)))
+
+    if counts:
+        return max(counts)
+
+    if (
+        "assertionerror" in text
+        or "modulenotfounderror" in text
+        or "traceback" in text
+        or "error" in text
+        or "failed" in text
+    ):
+        return 1
+
+    return 999
