@@ -3,3 +3,4 @@
 __pycache__/
 outputs/
 .pytest_cache/
+.stem_runtime/

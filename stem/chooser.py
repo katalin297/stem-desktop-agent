@@ -19,6 +19,15 @@ def clean_json(text: str) -> str:
     return cleaned
 
 
+def saw_failure(state: RunState) -> bool:
+    failure_words = ["traceback", "assert", "failed", "error"]
+
+    return any(
+        any(word in observation.lower() for word in failure_words)
+        for observation in state.observations
+    )
+
+
 def choose_action_local(task: Task, actions, state: RunState, blueprint) -> ActionChoice:
     if task.task_type == "debugging":
         repair_goal = bool(task.goal.get("repair_code"))
@@ -50,13 +59,7 @@ def choose_action_local(task: Task, actions, state: RunState, blueprint) -> Acti
                         reason = "[local] Start by running the main test command."
                     )
 
-        failure_words = ["traceback", "assert", "failed", "error"]
-        saw_failure = any(
-            any(word in observation.lower() for word in failure_words)
-            for observation in state.observations
-        )
-
-        if saw_failure:
+        if saw_failure(state):
             if len(state.files_read) < blueprint.debugging_files_after_failure and unread_files:
                 chosen = unread_files[0]
                 return ActionChoice(
@@ -135,6 +138,74 @@ def choose_action_local(task: Task, actions, state: RunState, blueprint) -> Acti
     )
 
 
+def guard_choice(task: Task, actions, state: RunState, blueprint, choice: ActionChoice) -> ActionChoice:
+    """
+    Safety layer around the LLM decision.
+
+    The LLM may be too eager to finish or keep running commands.
+    This guard forces minimum progress before accepting finish, and
+    stops after one repair attempt.
+    """
+
+    if task.task_type == "research":
+        if choice.kind == "finish" and len(state.files_read) < blueprint.research_min_files:
+            fallback = choose_action_local(task, actions, state, blueprint)
+            fallback.reason = f"[guard_research_finish_too_early] {fallback.reason}"
+            return fallback
+
+    if task.task_type == "debugging":
+        repair_goal = bool(task.goal.get("repair_code"))
+        failure_seen = saw_failure(state)
+
+        # One-file repair rule: after one repair attempt, stop.
+        if repair_goal and state.repair_attempted:
+            return ActionChoice(
+                kind = "finish",
+                value = "",
+                reason = "[guard_one_file_repair_done] One-file repair was already attempted, so finish."
+            )
+
+        # For repair tasks, do not keep running commands after seeing a failure.
+        # First inspect files, then repair.
+        if repair_goal and failure_seen and choice.kind == "run_command":
+            fallback = choose_action_local(task, actions, state, blueprint)
+            fallback.reason = f"[guard_read_or_repair_before_more_commands] {fallback.reason}"
+            return fallback
+
+        # For repair tasks, do not finish before repair is attempted.
+        if repair_goal and choice.kind == "finish":
+            fallback = choose_action_local(task, actions, state, blueprint)
+            fallback.reason = f"[guard_repair_not_attempted] {fallback.reason}"
+            return fallback
+
+        # For non-repair debugging, do not finish immediately after failure
+        # without reading at least one file.
+        if not repair_goal and choice.kind == "finish":
+            if failure_seen and len(state.files_read) == 0:
+                fallback = choose_action_local(task, actions, state, blueprint)
+                fallback.reason = f"[guard_no_file_read_after_failure] {fallback.reason}"
+                return fallback
+
+        # Do not allow repair before failure is reproduced.
+        if choice.kind == "write_file":
+            if not repair_goal:
+                fallback = choose_action_local(task, actions, state, blueprint)
+                fallback.reason = f"[guard_write_not_requested] {fallback.reason}"
+                return fallback
+
+            if not failure_seen:
+                fallback = choose_action_local(task, actions, state, blueprint)
+                fallback.reason = f"[guard_write_before_failure] {fallback.reason}"
+                return fallback
+
+            if choice.value not in state.files_read:
+                fallback = choose_action_local(task, actions, state, blueprint)
+                fallback.reason = f"[guard_write_before_reading_target] {fallback.reason}"
+                return fallback
+
+    return choice
+
+
 def choose_action_llm(task: Task, actions, state: RunState, blueprint, memory_summary: str) -> ActionChoice:
     action_text = "\n".join(
         [
@@ -147,8 +218,11 @@ def choose_action_llm(task: Task, actions, state: RunState, blueprint, memory_su
         "You are a careful task-solving agent. "
         "Choose exactly one next action from the allowed actions. "
         "Return JSON only with keys: kind, value, reason. "
-        "If the task requests code repair, you may choose one write_file action after you have enough evidence. "
-        "A write_file action means the system will generate replacement contents for that file and rerun tests automatically."
+        "Do not finish until the task goal is actually satisfied. "
+        "For research tasks, do not finish before reading the required number of sources. "
+        "For code repair tasks, do not finish after only reproducing the failure. "
+        "For code repair tasks, after reproducing the failure and reading the likely implementation file, "
+        "choose a write_file action to attempt a one-file repair."
     )
 
     user_prompt = f"""
@@ -168,6 +242,7 @@ Current state:
 - files_read: {state.files_read}
 - edited_files: {state.edited_files}
 - repair_attempted: {state.repair_attempted}
+- repair_success: {state.repair_success}
 - finish_requested: {state.finish_requested}
 
 Recent memory:
@@ -196,12 +271,9 @@ Return only JSON.
 
     allowed_pairs = {(action.kind, action.value) for action in actions}
 
-    if choice.kind == "finish":
-        return choice
-
-    if (choice.kind, choice.value) not in allowed_pairs:
+    if choice.kind != "finish" and (choice.kind, choice.value) not in allowed_pairs:
         fallback = choose_action_local(task, actions, state, blueprint)
         fallback.reason = f"[fallback_not_allowed] {fallback.reason}"
         return fallback
 
-    return choice
+    return guard_choice(task, actions, state, blueprint, choice)

@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 def prepare_runtime_repo(task_id: str, blueprint_name: str, original_repo_path: str) -> str:
-    base = Path("outputs/runtime")
+    base = Path(".stem_runtime")
     base.mkdir(parents = True, exist_ok = True)
 
     destination = base / f"{task_id}_{blueprint_name}_{uuid.uuid4().hex[:8]}"

@@ -25,6 +25,12 @@ def write_text_file(path: str, content: str) -> None:
 
 
 def make_unified_diff(old_text: str, new_text: str, file_path: str) -> str:
+    if old_text and not old_text.endswith("\n"):
+        old_text += "\n"
+
+    if new_text and not new_text.endswith("\n"):
+        new_text += "\n"
+
     diff = difflib.unified_diff(
         old_text.splitlines(keepends = True),
         new_text.splitlines(keepends = True),

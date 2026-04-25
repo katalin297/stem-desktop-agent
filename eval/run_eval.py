@@ -19,11 +19,22 @@ TEST_TASKS = [
 ]
 
 
+def normalize_path(path: str) -> str:
+    return path.removeprefix("./")
+
+
+def normalize_paths(paths: list[str]) -> list[str]:
+    return [normalize_path(path) for path in paths]
+
+
 def score_task(task, report) -> dict:
     expected = task.expected
     score = 0.0
     max_score = 0.0
     notes = []
+
+    report_likely_files = normalize_paths(report.likely_files)
+    report_edited_files = normalize_paths(report.edited_files)
 
     if "success" in expected:
         max_score += 1
@@ -48,21 +59,21 @@ def score_task(task, report) -> dict:
             notes.append("main evidence mismatch")
 
     if "likely_files_should_include" in expected:
-        needed = expected["likely_files_should_include"]
+        needed = normalize_paths(expected["likely_files_should_include"])
         max_score += len(needed)
 
         for item in needed:
-            if item in report.likely_files:
+            if item in report_likely_files:
                 score += 1
             else:
                 notes.append(f"missing likely file: {item}")
 
     if "edited_files_should_include" in expected:
-        needed = expected["edited_files_should_include"]
+        needed = normalize_paths(expected["edited_files_should_include"])
         max_score += len(needed)
 
         for item in needed:
-            if item in report.edited_files:
+            if item in report_edited_files:
                 score += 1
             else:
                 notes.append(f"missing edited file: {item}")
@@ -93,13 +104,13 @@ def score_task(task, report) -> dict:
 
 
 def evaluate_blueprint(blueprint, task_paths):
-    agent = StemAgent(blueprint = blueprint)
     total_score = 0.0
     total_max = 0.0
     total_actions = 0
     rows = []
 
     for task_path in task_paths:
+        agent = StemAgent(blueprint = blueprint)
         task = agent.load_task(task_path)
         report = agent.run(task)
         scored = score_task(task, report)

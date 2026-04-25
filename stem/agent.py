@@ -145,7 +145,7 @@ class StemAgent:
             diff = make_unified_diff(current_content, repaired_content, choice.value)
             state.patch_diff = diff[:2000]
 
-            repair_command = state.preferred_test_command or state.last_test_command or "python -m pytest -q"
+            repair_command = "python -m pytest -q"
             repair_result = run_command(repair_command, cwd = task.repo_path)
 
             state.commands_tried.append(repair_command)
