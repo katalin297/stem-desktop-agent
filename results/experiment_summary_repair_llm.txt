@@ -1,0 +1,9 @@
+Experiment summary
+
+Training results:
+- fast_finish: score 18.0/18.0, actions 17
+- baseline_general: score 18.0/18.0, actions 19
+- inspect_first: score 18.0/18.0, actions 19
+
+Selected blueprint: fast_finish
+Test results: 14.0/14.0, actions 13

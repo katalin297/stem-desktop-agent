@@ -1,0 +1,56 @@
+[
+  {
+    "blueprint": "fast_finish",
+    "task_id": "task_04",
+    "task_type": "debugging",
+    "success": true,
+    "repair_success": false,
+    "edited_files": [],
+    "main_evidence": "python -m pytest -q",
+    "likely_files": [
+      "./benchmark/repos/sample_bug_repo_03/list_utils.py",
+      "./benchmark/repos/sample_bug_repo_03/tests/test_list_utils.py"
+    ],
+    "actions_taken": 4,
+    "score": 4.0,
+    "max_score": 4.0,
+    "notes": []
+  },
+  {
+    "blueprint": "fast_finish",
+    "task_id": "task_05",
+    "task_type": "research",
+    "success": true,
+    "repair_success": false,
+    "edited_files": [],
+    "main_evidence": "Read 3 files and finished",
+    "likely_files": [
+      "./benchmark/repos/research_pack_02/doc_a.md",
+      "./benchmark/repos/research_pack_02/doc_b.md",
+      "./benchmark/repos/research_pack_02/doc_c.md"
+    ],
+    "actions_taken": 4,
+    "score": 5.0,
+    "max_score": 5.0,
+    "notes": []
+  },
+  {
+    "blueprint": "fast_finish",
+    "task_id": "task_07",
+    "task_type": "debugging",
+    "success": true,
+    "repair_success": true,
+    "edited_files": [
+      "./benchmark/repos/sample_bug_repo_03/list_utils.py"
+    ],
+    "main_evidence": "python -m pytest -q",
+    "likely_files": [
+      "./benchmark/repos/sample_bug_repo_03/list_utils.py",
+      "./benchmark/repos/sample_bug_repo_03/tests/test_list_utils.py"
+    ],
+    "actions_taken": 5,
+    "score": 5.0,
+    "max_score": 5.0,
+    "notes": []
+  }
+]

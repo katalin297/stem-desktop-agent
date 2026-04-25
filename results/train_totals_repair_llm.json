@@ -1,0 +1,20 @@
+[
+  {
+    "blueprint": "fast_finish",
+    "train_score": 18.0,
+    "train_max": 18.0,
+    "train_actions": 17
+  },
+  {
+    "blueprint": "baseline_general",
+    "train_score": 18.0,
+    "train_max": 18.0,
+    "train_actions": 19
+  },
+  {
+    "blueprint": "inspect_first",
+    "train_score": 18.0,
+    "train_max": 18.0,
+    "train_actions": 19
+  }
+]
